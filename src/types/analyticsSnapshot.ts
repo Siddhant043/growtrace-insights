@@ -22,6 +22,35 @@ export const trendMetricSchema = z.object({
   engagementScore: z.number().nonnegative(),
 });
 
+export const audienceSegmentCountsSchema = z.object({
+  total: z.number().int().nonnegative(),
+  highEngagement: z.number().int().nonnegative(),
+  lowEngagement: z.number().int().nonnegative(),
+  returningUsers: z.number().int().nonnegative(),
+});
+
+export const audienceCohortSchema = z.object({
+  cohortDate: z.string().trim().min(8),
+  primaryPlatform: z.string().trim().min(1),
+  users: z.number().int().nonnegative(),
+  returningUsers: z.number().int().nonnegative(),
+  avgEngagement: z.number().nonnegative(),
+});
+
+export const audienceTopPlatformSchema = z.object({
+  platform: z.string().trim().min(1),
+  returningUsers: z.number().nonnegative(),
+  avgEngagement: z.number().nonnegative(),
+});
+
+export const audienceSnapshotSchema = z.object({
+  segmentCounts: audienceSegmentCountsSchema,
+  cohorts: z.array(audienceCohortSchema).default([]),
+  topPlatformsByReturningUsers: z
+    .array(audienceTopPlatformSchema)
+    .default([]),
+});
+
 export const analyticsSnapshotSchema = z.object({
   userId: z.string().trim().min(1),
   asOfDate: z.string().trim().min(8),
@@ -29,9 +58,14 @@ export const analyticsSnapshotSchema = z.object({
   platformMetrics: z.array(platformMetricSchema).default([]),
   linkMetrics: z.array(linkMetricSchema).default([]),
   trendMetrics: z.array(trendMetricSchema).default([]),
+  audienceSnapshot: audienceSnapshotSchema.optional(),
 });
 
 export type PlatformMetric = z.infer<typeof platformMetricSchema>;
 export type LinkMetric = z.infer<typeof linkMetricSchema>;
 export type TrendMetric = z.infer<typeof trendMetricSchema>;
+export type AudienceSegmentCounts = z.infer<typeof audienceSegmentCountsSchema>;
+export type AudienceCohort = z.infer<typeof audienceCohortSchema>;
+export type AudienceTopPlatform = z.infer<typeof audienceTopPlatformSchema>;
+export type AudienceSnapshot = z.infer<typeof audienceSnapshotSchema>;
 export type AnalyticsSnapshot = z.infer<typeof analyticsSnapshotSchema>;

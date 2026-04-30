@@ -2,6 +2,7 @@ import { END, START, StateGraph } from "@langchain/langgraph";
 
 import type { AnalyticsSnapshot } from "../types/analyticsSnapshot";
 import type { GeneratedInsight } from "../types/generatedInsight";
+import { audienceAnalysisNode } from "./nodes/audienceAnalysisNode";
 import { contentAnalysisNode } from "./nodes/contentAnalysisNode";
 import { inputNode } from "./nodes/inputNode";
 import { outputNode } from "./nodes/outputNode";
@@ -15,13 +16,15 @@ const compiledInsightsWorkflow = new StateGraph(insightsWorkflowAnnotation)
   .addNode("platformAnalysisNode", platformAnalysisNode)
   .addNode("contentAnalysisNode", contentAnalysisNode)
   .addNode("trendAnalysisNode", trendAnalysisNode)
+  .addNode("audienceAnalysisNode", audienceAnalysisNode)
   .addNode("recommendationNode", recommendationNode)
   .addNode("outputNode", outputNode)
   .addEdge(START, "inputNode")
   .addEdge("inputNode", "platformAnalysisNode")
   .addEdge("platformAnalysisNode", "contentAnalysisNode")
   .addEdge("contentAnalysisNode", "trendAnalysisNode")
-  .addEdge("trendAnalysisNode", "recommendationNode")
+  .addEdge("trendAnalysisNode", "audienceAnalysisNode")
+  .addEdge("audienceAnalysisNode", "recommendationNode")
   .addEdge("recommendationNode", "outputNode")
   .addEdge("outputNode", END)
   .compile();

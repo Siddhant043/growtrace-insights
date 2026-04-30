@@ -59,6 +59,11 @@ export const outputNode = async (
         ruleHints: state.ruleHints,
       }),
     ),
+    ...state.audienceLlmInsights.map((rawInsight) =>
+      buildGeneratedInsight(state, rawInsight, "audience", {
+        audienceFindings: state.audienceFindings,
+      }),
+    ),
   ];
 
   outputLogger.info("Insights composed", {
@@ -68,6 +73,7 @@ export const outputNode = async (
     content: state.contentLlmInsights.length,
     trend: state.trendLlmInsights.length,
     recommendation: state.recommendationLlmInsights.length,
+    audience: state.audienceLlmInsights.length,
   });
 
   return {

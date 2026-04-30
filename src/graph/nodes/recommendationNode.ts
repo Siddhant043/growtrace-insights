@@ -19,6 +19,14 @@ const RULE_HINT_TO_TEXT: Record<RecommendationRuleHint, string> = {
     "Diagnose and address the recent engagement drop",
   double_down_on_top_link:
     "Promote the top-performing link in additional channels",
+  double_down_on_audience_platform:
+    "Double down on the platform that brings your most engaged returning users",
+  rescue_at_risk_cohort:
+    "Re-engage the at-risk audience cohort before they churn",
+  celebrate_loyal_audience:
+    "Reward loyal audience segments with exclusive content or perks",
+  warn_low_loyalty_audience:
+    "Add hooks or recurring formats to bring first-time visitors back",
 };
 
 const deriveRuleHints = (
@@ -49,6 +57,34 @@ const deriveRuleHints = (
     )
   ) {
     ruleHints.push("double_down_on_top_link");
+  }
+  if (
+    state.audienceFindings.some(
+      (audienceFinding) => audienceFinding.category === "best_users_platform",
+    )
+  ) {
+    ruleHints.push("double_down_on_audience_platform");
+  }
+  if (
+    state.audienceFindings.some(
+      (audienceFinding) => audienceFinding.category === "at_risk_cohort",
+    )
+  ) {
+    ruleHints.push("rescue_at_risk_cohort");
+  }
+  if (
+    state.audienceFindings.some(
+      (audienceFinding) => audienceFinding.category === "audience_loyalty",
+    )
+  ) {
+    ruleHints.push("celebrate_loyal_audience");
+  }
+  if (
+    state.audienceFindings.some(
+      (audienceFinding) => audienceFinding.category === "low_loyalty_warning",
+    )
+  ) {
+    ruleHints.push("warn_low_loyalty_audience");
   }
   return ruleHints;
 };
@@ -85,6 +121,16 @@ const formatTrendSignal = (state: InsightsWorkflowState): string => {
   return `direction=${direction}, change=${formattedPercent}, sampleDays=${sampleDays}`;
 };
 
+const formatAudienceSignals = (state: InsightsWorkflowState): string => {
+  if (state.audienceFindings.length === 0) return "(none)";
+  return state.audienceFindings
+    .map(
+      (audienceFinding) =>
+        `- ${audienceFinding.category}: ${audienceFinding.message}`,
+    )
+    .join("\n");
+};
+
 export const recommendationNode = async (
   state: InsightsWorkflowState,
 ): Promise<InsightsWorkflowUpdate> => {
@@ -110,6 +156,7 @@ export const recommendationNode = async (
     platformSignalsBulleted: formatPlatformSignals(state),
     contentSignalsBulleted: formatContentSignals(state),
     trendSignalLine: formatTrendSignal(state),
+    audienceSignalsBulleted: formatAudienceSignals(state),
     ruleHintsBulleted,
   });
 

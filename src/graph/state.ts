@@ -42,7 +42,22 @@ export type RecommendationRuleHint =
   | "improve_landing_page"
   | "post_more_on_top_platform"
   | "diagnose_recent_change"
-  | "double_down_on_top_link";
+  | "double_down_on_top_link"
+  | "double_down_on_audience_platform"
+  | "rescue_at_risk_cohort"
+  | "celebrate_loyal_audience"
+  | "warn_low_loyalty_audience";
+
+export type AudienceFinding = {
+  category:
+    | "best_users_platform"
+    | "at_risk_cohort"
+    | "audience_loyalty"
+    | "low_loyalty_warning"
+    | "high_engagement_share";
+  message: string;
+  metadata: Record<string, unknown>;
+};
 
 export const insightsWorkflowAnnotation = Annotation.Root({
   snapshot: Annotation<AnalyticsSnapshot>(),
@@ -75,6 +90,14 @@ export const insightsWorkflowAnnotation = Annotation.Root({
     default: () => [],
   }),
   recommendationLlmInsights: Annotation<LlmInsight[]>({
+    reducer: (_left, right) => right,
+    default: () => [],
+  }),
+  audienceFindings: Annotation<AudienceFinding[]>({
+    reducer: (_left, right) => right,
+    default: () => [],
+  }),
+  audienceLlmInsights: Annotation<LlmInsight[]>({
     reducer: (_left, right) => right,
     default: () => [],
   }),
