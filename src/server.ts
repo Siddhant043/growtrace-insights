@@ -1,14 +1,14 @@
-import { startInsightsQueueConsumer } from "./consumer/insightsQueueConsumer";
+import { startInsightsQueueConsumer } from "./consumer/insightsQueueConsumer.js";
 import {
   closeRabbitMqResources,
   connectToRabbitMq,
-} from "./infrastructure/rabbitmq";
+} from "./infrastructure/rabbitmq.js";
 import {
   connectToInsightsDatabase,
   disconnectFromInsightsDatabase,
-} from "./infrastructure/mongo";
-import { env } from "./config/env";
-import { createScopedLogger } from "./utils/logger";
+} from "./infrastructure/mongo.js";
+import { env } from "./config/env.js";
+import { createScopedLogger } from "./utils/logger.js";
 
 const bootLogger = createScopedLogger("server");
 

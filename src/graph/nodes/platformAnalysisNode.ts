@@ -1,13 +1,13 @@
-import { llmInsightArraySchema } from "../../types/generatedInsight";
-import { getChatModel } from "../../llm/chatModelFactory";
-import { platformInsightsPromptTemplate } from "../../llm/prompts/platformInsightsPrompt";
-import { createScopedLogger } from "../../utils/logger";
+import { llmInsightArraySchema } from "../../types/generatedInsight.js";
+import { getChatModel } from "../../llm/chatModelFactory.js";
+import { platformInsightsPromptTemplate } from "../../llm/prompts/platformInsightsPrompt.js";
+import { createScopedLogger } from "../../utils/logger.js";
 import type {
   FlaggedPlatformSignal,
   InsightsWorkflowState,
   InsightsWorkflowUpdate,
   PlatformQualityFlag,
-} from "../state";
+} from "../state.js";
 
 const platformLogger = createScopedLogger("graph.platformAnalysisNode");
 

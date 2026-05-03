@@ -1,15 +1,15 @@
 import { END, START, StateGraph } from "@langchain/langgraph";
 
-import type { AnalyticsSnapshot } from "../types/analyticsSnapshot";
-import type { GeneratedInsight } from "../types/generatedInsight";
-import { audienceAnalysisNode } from "./nodes/audienceAnalysisNode";
-import { contentAnalysisNode } from "./nodes/contentAnalysisNode";
-import { inputNode } from "./nodes/inputNode";
-import { outputNode } from "./nodes/outputNode";
-import { platformAnalysisNode } from "./nodes/platformAnalysisNode";
-import { recommendationNode } from "./nodes/recommendationNode";
-import { trendAnalysisNode } from "./nodes/trendAnalysisNode";
-import { insightsWorkflowAnnotation } from "./state";
+import type { AnalyticsSnapshot } from "../types/analyticsSnapshot.js";
+import type { GeneratedInsight } from "../types/generatedInsight.js";
+import { audienceAnalysisNode } from "./nodes/audienceAnalysisNode.js";
+import { contentAnalysisNode } from "./nodes/contentAnalysisNode.js";
+import { inputNode } from "./nodes/inputNode.js";
+import { outputNode } from "./nodes/outputNode.js";
+import { platformAnalysisNode } from "./nodes/platformAnalysisNode.js";
+import { recommendationNode } from "./nodes/recommendationNode.js";
+import { trendAnalysisNode } from "./nodes/trendAnalysisNode.js";
+import { insightsWorkflowAnnotation } from "./state.js";
 
 const compiledInsightsWorkflow = new StateGraph(insightsWorkflowAnnotation)
   .addNode("inputNode", inputNode)

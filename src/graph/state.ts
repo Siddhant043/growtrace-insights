@@ -1,10 +1,10 @@
 import { Annotation } from "@langchain/langgraph";
 
-import type { AnalyticsSnapshot } from "../types/analyticsSnapshot";
+import type { AnalyticsSnapshot } from "../types/analyticsSnapshot.js";
 import type {
   GeneratedInsight,
   LlmInsight,
-} from "../types/generatedInsight";
+} from "../types/generatedInsight.js";
 
 export type PlatformQualityFlag =
   | "low_quality_traffic"

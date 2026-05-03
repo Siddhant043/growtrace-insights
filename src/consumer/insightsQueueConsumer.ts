@@ -1,14 +1,14 @@
 import type { ConsumeMessage } from "amqplib";
 
-import { env } from "../config/env";
-import { runInsightsWorkflow } from "../graph/workflow";
-import { assertInsightsTopology } from "../infrastructure/rabbitmq";
-import { upsertGeneratedInsightBatch } from "../repositories/insightsRepository";
+import { env } from "../config/env.js";
+import { runInsightsWorkflow } from "../graph/workflow.js";
+import { assertInsightsTopology } from "../infrastructure/rabbitmq.js";
+import { upsertGeneratedInsightBatch } from "../repositories/insightsRepository.js";
 import {
   analyticsSnapshotSchema,
   type AnalyticsSnapshot,
-} from "../types/analyticsSnapshot";
-import { createScopedLogger } from "../utils/logger";
+} from "../types/analyticsSnapshot.js";
+import { createScopedLogger } from "../utils/logger.js";
 
 const consumerLogger = createScopedLogger("consumer.insightsQueue");
 

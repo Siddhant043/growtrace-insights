@@ -4,7 +4,7 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatOllama } from "@langchain/ollama";
 import { ChatOpenAI } from "@langchain/openai";
 
-import { env } from "../config/env";
+import { env } from "../config/env.js";
 
 let cachedChatModel: BaseChatModel | null = null;
 

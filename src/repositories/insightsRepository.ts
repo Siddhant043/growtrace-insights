@@ -1,6 +1,6 @@
-import { InsightModel } from "../models/insight.model";
-import type { GeneratedInsight } from "../types/generatedInsight";
-import { createScopedLogger } from "../utils/logger";
+import { InsightModel } from "../models/insight.model.js";
+import type { GeneratedInsight } from "../types/generatedInsight.js";
+import { createScopedLogger } from "../utils/logger.js";
 
 const repositoryLogger = createScopedLogger("repository.insights");
 

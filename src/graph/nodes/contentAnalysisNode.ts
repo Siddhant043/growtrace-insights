@@ -1,12 +1,12 @@
-import { llmInsightArraySchema } from "../../types/generatedInsight";
-import { getChatModel } from "../../llm/chatModelFactory";
-import { contentInsightsPromptTemplate } from "../../llm/prompts/contentInsightsPrompt";
-import { createScopedLogger } from "../../utils/logger";
+import { llmInsightArraySchema } from "../../types/generatedInsight.js";
+import { getChatModel } from "../../llm/chatModelFactory.js";
+import { contentInsightsPromptTemplate } from "../../llm/prompts/contentInsightsPrompt.js";
+import { createScopedLogger } from "../../utils/logger.js";
 import type {
   InsightsWorkflowState,
   InsightsWorkflowUpdate,
   RankedLinkSignal,
-} from "../state";
+} from "../state.js";
 
 const contentLogger = createScopedLogger("graph.contentAnalysisNode");
 

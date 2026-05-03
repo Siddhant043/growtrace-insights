@@ -1,12 +1,12 @@
-import { llmInsightArraySchema } from "../../types/generatedInsight";
-import { getChatModel } from "../../llm/chatModelFactory";
-import { recommendationsPromptTemplate } from "../../llm/prompts/recommendationsPrompt";
-import { createScopedLogger } from "../../utils/logger";
+import { llmInsightArraySchema } from "../../types/generatedInsight.js";
+import { getChatModel } from "../../llm/chatModelFactory.js";
+import { recommendationsPromptTemplate } from "../../llm/prompts/recommendationsPrompt.js";
+import { createScopedLogger } from "../../utils/logger.js";
 import type {
   InsightsWorkflowState,
   InsightsWorkflowUpdate,
   RecommendationRuleHint,
-} from "../state";
+} from "../state.js";
 
 const recommendationLogger = createScopedLogger("graph.recommendationNode");
 

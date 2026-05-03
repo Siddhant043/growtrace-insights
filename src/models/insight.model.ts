@@ -1,6 +1,6 @@
 import { model, Schema, type InferSchemaType, type Types } from "mongoose";
 
-import { INSIGHT_TYPES } from "../types/generatedInsight";
+import { INSIGHT_TYPES } from "../types/generatedInsight.js";
 
 const insightSchema = new Schema(
   {

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
-import { env } from "../config/env";
-import { createScopedLogger } from "../utils/logger";
+import { env } from "../config/env.js";
+import { createScopedLogger } from "../utils/logger.js";
 
 const mongoLogger = createScopedLogger("infrastructure.mongo");
 

@@ -5,7 +5,7 @@
   "main": "src/server.ts",
   "type": "module",
   "scripts": {
-    "start": "tsx src/server.ts",
+    "start": "node dist/src/server.js",
     "dev": "nodemon --exec \"tsx src/server.ts\"",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",

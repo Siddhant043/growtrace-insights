@@ -1,9 +1,9 @@
-import { analyticsSnapshotSchema } from "../../types/analyticsSnapshot";
-import { createScopedLogger } from "../../utils/logger";
+import { analyticsSnapshotSchema } from "../../types/analyticsSnapshot.js";
+import { createScopedLogger } from "../../utils/logger.js";
 import type {
   InsightsWorkflowState,
   InsightsWorkflowUpdate,
-} from "../state";
+} from "../state.js";
 
 const inputNodeLogger = createScopedLogger("graph.inputNode");
 

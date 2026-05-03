@@ -1,12 +1,12 @@
-import { llmInsightArraySchema } from "../../types/generatedInsight";
-import { getChatModel } from "../../llm/chatModelFactory";
-import { trendInsightsPromptTemplate } from "../../llm/prompts/trendInsightsPrompt";
-import { createScopedLogger } from "../../utils/logger";
+import { llmInsightArraySchema } from "../../types/generatedInsight.js";
+import { getChatModel } from "../../llm/chatModelFactory.js";
+import { trendInsightsPromptTemplate } from "../../llm/prompts/trendInsightsPrompt.js";
+import { createScopedLogger } from "../../utils/logger.js";
 import type {
   InsightsWorkflowState,
   InsightsWorkflowUpdate,
   TrendComparison,
-} from "../state";
+} from "../state.js";
 
 const trendLogger = createScopedLogger("graph.trendAnalysisNode");
 

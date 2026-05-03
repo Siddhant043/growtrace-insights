@@ -2,13 +2,13 @@ import type {
   GeneratedInsight,
   InsightType,
   LlmInsight,
-} from "../../types/generatedInsight";
-import { computeInsightDeduplicationSignature } from "../../utils/hashSignature";
-import { createScopedLogger } from "../../utils/logger";
+} from "../../types/generatedInsight.js";
+import { computeInsightDeduplicationSignature } from "../../utils/hashSignature.js";
+import { createScopedLogger } from "../../utils/logger.js";
 import type {
   InsightsWorkflowState,
   InsightsWorkflowUpdate,
-} from "../state";
+} from "../state.js";
 
 const outputLogger = createScopedLogger("graph.outputNode");
 

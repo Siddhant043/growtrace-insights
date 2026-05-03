@@ -1,17 +1,17 @@
-import { llmInsightArraySchema } from "../../types/generatedInsight";
-import { getChatModel } from "../../llm/chatModelFactory";
-import { audienceInsightsPromptTemplate } from "../../llm/prompts/audienceInsightsPrompt";
-import { createScopedLogger } from "../../utils/logger";
+import { llmInsightArraySchema } from "../../types/generatedInsight.js";
+import { getChatModel } from "../../llm/chatModelFactory.js";
+import { audienceInsightsPromptTemplate } from "../../llm/prompts/audienceInsightsPrompt.js";
+import { createScopedLogger } from "../../utils/logger.js";
 import type {
   AudienceCohort,
   AudienceSnapshot,
   AudienceTopPlatform,
-} from "../../types/analyticsSnapshot";
+} from "../../types/analyticsSnapshot.js";
 import type {
   AudienceFinding,
   InsightsWorkflowState,
   InsightsWorkflowUpdate,
-} from "../state";
+} from "../state.js";
 
 const audienceLogger = createScopedLogger("graph.audienceAnalysisNode");
 
