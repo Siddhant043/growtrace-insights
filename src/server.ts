@@ -13,7 +13,9 @@ import { createScopedLogger } from "./utils/logger.js";
 const bootLogger = createScopedLogger("server");
 
 const bootstrapInsightsMicroservice = async (): Promise<void> => {
-  bootLogger.info("Starting insights-ms", {
+  const llmSummary = `provider=${env.LLM_PROVIDER} model=${env.RESOLVED_LLM_MODEL}`;
+
+  bootLogger.info(`Starting insights-ms (${llmSummary})`, {
     nodeEnv: env.NODE_ENV,
     llmProvider: env.LLM_PROVIDER,
     llmModel: env.RESOLVED_LLM_MODEL,
@@ -25,7 +27,10 @@ const bootstrapInsightsMicroservice = async (): Promise<void> => {
   await connectToRabbitMq();
   await startInsightsQueueConsumer();
 
-  bootLogger.info("insights-ms is running");
+  bootLogger.info(`insights-ms is running (${llmSummary})`, {
+    llmProvider: env.LLM_PROVIDER,
+    llmModel: env.RESOLVED_LLM_MODEL,
+  });
 };
 
 const handleShutdownSignal = async (signal: NodeJS.Signals): Promise<void> => {

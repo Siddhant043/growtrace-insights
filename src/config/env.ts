@@ -16,7 +16,7 @@ export type SupportedLlmProvider = (typeof SUPPORTED_LLM_PROVIDERS)[number];
 const DEFAULT_MODEL_PER_PROVIDER: Record<SupportedLlmProvider, string> = {
   openai: "gpt-4o-mini",
   anthropic: "claude-3-5-sonnet-latest",
-  google: "gemini-1.5-flash",
+  google: "gemini-2.5-flash",
   ollama: "llama3.1:8b",
 };
 
@@ -80,21 +80,14 @@ const insightsRuntimeEnvironmentSchema = z
     LANGSMITH_TRACING: z
       .string()
       .optional()
-      .transform(
-        (rawValue) => rawValue?.trim().toLowerCase() === "true",
-      ),
-    LANGSMITH_ENDPOINT: z.preprocess(
-      (rawValue) => {
-        if (rawValue === undefined || rawValue === null) {
-          return "https://api.smith.langchain.com";
-        }
-        const trimmed = String(rawValue).trim();
-        return trimmed.length === 0
-          ? "https://api.smith.langchain.com"
-          : trimmed;
-      },
-      z.string().url("LANGSMITH_ENDPOINT must be a valid URL"),
-    ),
+      .transform((rawValue) => rawValue?.trim().toLowerCase() === "true"),
+    LANGSMITH_ENDPOINT: z.preprocess((rawValue) => {
+      if (rawValue === undefined || rawValue === null) {
+        return "https://api.smith.langchain.com";
+      }
+      const trimmed = String(rawValue).trim();
+      return trimmed.length === 0 ? "https://api.smith.langchain.com" : trimmed;
+    }, z.string().url("LANGSMITH_ENDPOINT must be a valid URL")),
     LANGSMITH_API_KEY: z
       .string()
       .optional()
