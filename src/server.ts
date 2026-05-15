@@ -17,6 +17,8 @@ const bootstrapInsightsMicroservice = async (): Promise<void> => {
     nodeEnv: env.NODE_ENV,
     llmProvider: env.LLM_PROVIDER,
     llmModel: env.RESOLVED_LLM_MODEL,
+    langsmithTracing: env.LANGSMITH_TRACING,
+    langsmithProject: env.LANGSMITH_PROJECT,
   });
 
   await connectToInsightsDatabase();

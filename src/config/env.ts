@@ -76,6 +76,41 @@ const insightsRuntimeEnvironmentSchema = z
       .default(750),
 
     LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
+
+    LANGSMITH_TRACING: z
+      .string()
+      .optional()
+      .transform(
+        (rawValue) => rawValue?.trim().toLowerCase() === "true",
+      ),
+    LANGSMITH_ENDPOINT: z.preprocess(
+      (rawValue) => {
+        if (rawValue === undefined || rawValue === null) {
+          return "https://api.smith.langchain.com";
+        }
+        const trimmed = String(rawValue).trim();
+        return trimmed.length === 0
+          ? "https://api.smith.langchain.com"
+          : trimmed;
+      },
+      z.string().url("LANGSMITH_ENDPOINT must be a valid URL"),
+    ),
+    LANGSMITH_API_KEY: z
+      .string()
+      .optional()
+      .transform((rawValue) =>
+        rawValue === undefined || rawValue === null ? "" : rawValue.trim(),
+      ),
+    LANGSMITH_PROJECT: z.preprocess(
+      (rawValue) => {
+        if (rawValue === undefined || rawValue === null) {
+          return "Growtrace";
+        }
+        const trimmed = String(rawValue).trim();
+        return trimmed.length === 0 ? "Growtrace" : trimmed;
+      },
+      z.string().min(1, "LANGSMITH_PROJECT cannot be empty"),
+    ),
   })
   .superRefine((parsedEnvironment, validationContext) => {
     const provider = parsedEnvironment.LLM_PROVIDER;
@@ -100,6 +135,17 @@ const insightsRuntimeEnvironmentSchema = z
         path: ["GOOGLE_API_KEY"],
       });
     }
+    if (
+      parsedEnvironment.LANGSMITH_TRACING &&
+      parsedEnvironment.LANGSMITH_API_KEY.length === 0
+    ) {
+      validationContext.addIssue({
+        code: "custom",
+        message:
+          "LANGSMITH_API_KEY is required when LANGSMITH_TRACING is enabled",
+        path: ["LANGSMITH_API_KEY"],
+      });
+    }
   });
 
 const parsedRuntimeEnvironment = insightsRuntimeEnvironmentSchema.safeParse(
@@ -117,6 +163,24 @@ if (!parsedRuntimeEnvironment.success) {
 }
 
 const validatedEnvironment = parsedRuntimeEnvironment.data;
+
+const applyLangSmithConfigToProcessEnvironment = (): void => {
+  process.env.LANGSMITH_TRACING = validatedEnvironment.LANGSMITH_TRACING
+    ? "true"
+    : "false";
+  process.env.LANGSMITH_ENDPOINT = validatedEnvironment.LANGSMITH_ENDPOINT;
+  process.env.LANGSMITH_PROJECT = validatedEnvironment.LANGSMITH_PROJECT;
+  if (
+    validatedEnvironment.LANGSMITH_TRACING &&
+    validatedEnvironment.LANGSMITH_API_KEY.length > 0
+  ) {
+    process.env.LANGSMITH_API_KEY = validatedEnvironment.LANGSMITH_API_KEY;
+  } else {
+    delete process.env.LANGSMITH_API_KEY;
+  }
+};
+
+applyLangSmithConfigToProcessEnvironment();
 
 export const env = {
   ...validatedEnvironment,

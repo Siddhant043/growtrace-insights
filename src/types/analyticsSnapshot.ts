@@ -53,6 +53,20 @@ export const audienceSnapshotSchema = z.object({
 
 export const analyticsSnapshotSchema = z.object({
   userId: z.string().trim().min(1),
+  adminUserContext: z
+    .object({
+      accountStatus: z.enum(["active", "suspended"]).optional(),
+      plan: z.enum(["free", "pro"]).optional(),
+      lastLoginAt: z.string().datetime().nullable().optional(),
+      stats: z
+        .object({
+          totalLinks: z.number().int().nonnegative(),
+          totalClicks: z.number().int().nonnegative(),
+          engagementScore: z.number().nonnegative(),
+        })
+        .optional(),
+    })
+    .optional(),
   asOfDate: z.string().trim().min(8),
   windowDays: z.number().int().positive().max(365).default(7),
   platformMetrics: z.array(platformMetricSchema).default([]),
