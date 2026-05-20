@@ -12,21 +12,21 @@ const recommendationLogger = createScopedLogger("graph.recommendationNode");
 
 const RULE_HINT_TO_TEXT: Record<RecommendationRuleHint, string> = {
   improve_landing_page:
-    "Improve the landing page experience for high-traffic but high-bounce platforms",
+    "Fix landing pages for high-traffic platforms with high bounce—post-click quality is weak",
   post_more_on_top_platform:
-    "Post more frequently on the highest-engagement platform",
+    "Scale spend or distribution on the highest-engagement platform—it drives the strongest post-click sessions",
   diagnose_recent_change:
-    "Diagnose and address the recent engagement drop",
+    "Diagnose and address the recent drop in post-click engagement quality",
   double_down_on_top_link:
-    "Promote the top-performing link in additional channels",
+    "Route more campaign traffic to the top-performing link by engagement score",
   double_down_on_audience_platform:
-    "Double down on the platform that brings your most engaged returning users",
+    "Scale the platform that brings your most engaged returning visitors",
   rescue_at_risk_cohort:
-    "Re-engage the at-risk audience cohort before they churn",
+    "Re-engage the at-risk visitor cohort before they churn from your funnel",
   celebrate_loyal_audience:
-    "Reward loyal audience segments with exclusive content or perks",
+    "Reward loyal visitor segments to protect repeat conversion and retention",
   warn_low_loyalty_audience:
-    "Add hooks or recurring formats to bring first-time visitors back",
+    "Improve onboarding or offers for first-time visitors with low return rates",
 };
 
 const deriveRuleHints = (

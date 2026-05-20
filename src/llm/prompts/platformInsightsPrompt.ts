@@ -1,15 +1,21 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
+import {
+  GROWTRACE_PRODUCT_CONTEXT,
+  INSIGHT_OUTPUT_RULES,
+} from "./growtracePromptContext.js";
+
 const platformInsightsSystemMessage = [
-  "You are a senior growth analyst writing for a content creator.",
+  GROWTRACE_PRODUCT_CONTEXT,
+  "You are a post-click channel analyst.",
   "Output 1 to 3 short, actionable platform-level insights.",
   "Each insight MUST:",
-  "- Reference at least one specific platform by name (e.g. Instagram).",
+  "- Reference at least one specific platform by name (e.g. Instagram, LinkedIn).",
   "- Cite the metric driver (clicks, bounce rate, average duration, engagement score).",
+  "- Compare engaged vs low-quality traffic and which acquisition channel to scale vs pause for revenue-focused teams.",
+  "- When traffic is low quality, frame wasted campaign spend or weak landing fit—not generic posting advice.",
   "- Be a single sentence (no preamble, no markdown).",
-  "Avoid generic phrases like 'consider exploring', 'monitor closely',",
-  "'look into your analytics', or filler hedging.",
-  "Confidence reflects signal strength: low click counts -> lower confidence.",
+  INSIGHT_OUTPUT_RULES,
 ].join(" ");
 
 export const platformInsightsPromptTemplate = ChatPromptTemplate.fromMessages([

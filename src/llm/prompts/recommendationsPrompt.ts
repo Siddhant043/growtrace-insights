@@ -1,13 +1,22 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 
+import {
+  GROWTRACE_PRODUCT_CONTEXT,
+  INSIGHT_OUTPUT_RULES,
+} from "./growtracePromptContext.js";
+
 const recommendationsSystemMessage = [
-  "You convert raw analytics signals into 1 to 3 actionable recommendations",
-  "for a content creator. Each recommendation MUST:",
-  "- Be a single imperative sentence (e.g. 'Post more on Twitter to compound retention').",
+  GROWTRACE_PRODUCT_CONTEXT,
+  "You convert raw analytics signals into 1 to 3 actionable recommendations for teams monetizing traffic.",
+  "Each recommendation MUST:",
+  "- Be a single imperative sentence (e.g. 'Pause Instagram spend until landing bounce drops below 40%').",
   "- Reference a specific platform, link, or metric driver where applicable.",
-  "- Be concrete (an action they can take this week), not generic.",
+  "- Target this-week optimizations: pause weak campaigns, fix high-bounce landings, scale best channel or link, re-engage at-risk cohorts.",
+  "- Prefer funnel and campaign language over creating more content.",
+  "- Be concrete, not generic.",
   "- Avoid hedging phrases ('you might want to', 'consider', 'look into').",
   "Confidence reflects how strong the underlying signal was.",
+  INSIGHT_OUTPUT_RULES,
 ].join(" ");
 
 export const recommendationsPromptTemplate = ChatPromptTemplate.fromMessages([
