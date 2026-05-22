@@ -1,7 +1,7 @@
 {
-  "name": "insights-ms",
+  "name": "llm-ms",
   "version": "1.0.0",
-  "description": "AI Insights microservice. Consumes per-user analytics snapshots from RabbitMQ, runs a LangGraph workflow with deterministic + LLM analysis nodes, and persists structured insights to MongoDB.",
+  "description": "LLM microservice.",
   "main": "src/server.ts",
   "type": "module",
   "scripts": {
@@ -12,9 +12,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "growtrace",
-    "ai",
-    "insights",
+    "neverstale",
+    "llm",
     "langchain",
     "langgraph",
     "rabbitmq"
@@ -22,7 +21,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@google/genai": "^2.3.0",
     "@langchain/anthropic": "^1.3.28",
     "@langchain/core": "^1.1.42",
     "@langchain/google-genai": "^2.1.29",
@@ -32,7 +30,6 @@
     "amqplib": "^1.0.3",
     "dotenv": "^17.4.2",
     "langsmith": "^0.7.1",
-    "mongoose": "^9.5.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

@@ -45,7 +45,7 @@ export const connectToRabbitMq = async (): Promise<ChannelModel> => {
     topologyAssertedFlag = false;
   });
 
-  rabbitmqLogger.info("Connected to RabbitMQ", { url: connectionUrl });
+  rabbitmqLogger.info("Connected to RabbitMQ");
   return cachedConnection;
 };
 
@@ -56,105 +56,88 @@ export const getRabbitMqChannel = async (): Promise<Channel> => {
 
   const connection = await connectToRabbitMq();
   cachedChannel = await connection.createChannel();
-
-  cachedChannel.on("error", (channelError) => {
-    rabbitmqLogger.error("RabbitMQ channel error", {
-      error:
-        channelError instanceof Error
-          ? channelError.message
-          : String(channelError),
-    });
-  });
-
-  cachedChannel.on("close", () => {
-    rabbitmqLogger.warn("RabbitMQ channel closed");
-    cachedChannel = null;
-    topologyAssertedFlag = false;
-  });
-
-  await cachedChannel.prefetch(env.INSIGHTS_PREFETCH);
-
+  await cachedChannel.prefetch(env.WORKFLOW_LLM_PREFETCH);
   return cachedChannel;
 };
 
-/**
- * Idempotently asserts the analytics exchange, the consumer queue (with
- * DLX bindings), and the dead-letter pair. Safe to call repeatedly; the
- * `topologyAssertedFlag` guards against redundant work after the first run.
- */
-export const assertInsightsTopology = async (): Promise<Channel> => {
+export const assertWorkflowLlmTopology = async (): Promise<Channel> => {
   const channel = await getRabbitMqChannel();
   if (topologyAssertedFlag) {
     return channel;
   }
 
-  await channel.assertExchange(env.INSIGHTS_EXCHANGE, "topic", {
+  await channel.assertExchange(env.WORKFLOW_LLM_EXCHANGE, "topic", {
+    durable: true,
+  });
+  await channel.assertExchange(env.WORKFLOW_LLM_DLX_EXCHANGE, "topic", {
     durable: true,
   });
 
-  await channel.assertExchange(env.INSIGHTS_DEAD_LETTER_EXCHANGE, "topic", {
-    durable: true,
-  });
-
-  await channel.assertQueue(env.INSIGHTS_DEAD_LETTER_QUEUE, {
-    durable: true,
-  });
+  await channel.assertQueue(env.WORKFLOW_LLM_DLQ, { durable: true });
   await channel.bindQueue(
-    env.INSIGHTS_DEAD_LETTER_QUEUE,
-    env.INSIGHTS_DEAD_LETTER_EXCHANGE,
-    env.INSIGHTS_DEAD_LETTER_ROUTING_KEY,
+    env.WORKFLOW_LLM_DLQ,
+    env.WORKFLOW_LLM_DLX_EXCHANGE,
+    env.WORKFLOW_LLM_DL_ROUTING_KEY,
   );
 
-  await channel.assertQueue(env.INSIGHTS_QUEUE, {
+  await channel.assertQueue(env.WORKFLOW_LLM_REQUEST_QUEUE, {
     durable: true,
     arguments: {
-      "x-dead-letter-exchange": env.INSIGHTS_DEAD_LETTER_EXCHANGE,
-      "x-dead-letter-routing-key": env.INSIGHTS_DEAD_LETTER_ROUTING_KEY,
+      "x-dead-letter-exchange": env.WORKFLOW_LLM_DLX_EXCHANGE,
+      "x-dead-letter-routing-key": env.WORKFLOW_LLM_DL_ROUTING_KEY,
     },
   });
   await channel.bindQueue(
-    env.INSIGHTS_QUEUE,
-    env.INSIGHTS_EXCHANGE,
-    env.INSIGHTS_ROUTING_KEY,
+    env.WORKFLOW_LLM_REQUEST_QUEUE,
+    env.WORKFLOW_LLM_EXCHANGE,
+    env.WORKFLOW_LLM_REQUEST_ROUTING_KEY,
+  );
+
+  await channel.assertQueue(env.WORKFLOW_LLM_RESPONSE_QUEUE, {
+    durable: true,
+    arguments: {
+      "x-dead-letter-exchange": env.WORKFLOW_LLM_DLX_EXCHANGE,
+      "x-dead-letter-routing-key": env.WORKFLOW_LLM_DL_ROUTING_KEY,
+    },
+  });
+  await channel.bindQueue(
+    env.WORKFLOW_LLM_RESPONSE_QUEUE,
+    env.WORKFLOW_LLM_EXCHANGE,
+    env.WORKFLOW_LLM_RESPONSE_ROUTING_KEY,
   );
 
   topologyAssertedFlag = true;
-
-  rabbitmqLogger.info("Insights RabbitMQ topology asserted", {
-    exchange: env.INSIGHTS_EXCHANGE,
-    queue: env.INSIGHTS_QUEUE,
-    deadLetterExchange: env.INSIGHTS_DEAD_LETTER_EXCHANGE,
-    deadLetterQueue: env.INSIGHTS_DEAD_LETTER_QUEUE,
-    routingKey: env.INSIGHTS_ROUTING_KEY,
-  });
-
+  rabbitmqLogger.info("Workflow LLM RabbitMQ topology asserted");
   return channel;
+};
+
+export const publishWorkflowGenerationResponse = async (
+  payload: unknown,
+): Promise<void> => {
+  const channel = await assertWorkflowLlmTopology();
+  const body = Buffer.from(JSON.stringify(payload), "utf-8");
+  channel.publish(
+    env.WORKFLOW_LLM_EXCHANGE,
+    env.WORKFLOW_LLM_RESPONSE_ROUTING_KEY,
+    body,
+    { contentType: "application/json", persistent: true },
+  );
 };
 
 export const closeRabbitMqResources = async (): Promise<void> => {
   if (cachedChannel) {
     try {
       await cachedChannel.close();
-    } catch (closeError) {
-      rabbitmqLogger.warn("Failed to close channel cleanly", {
-        error:
-          closeError instanceof Error
-            ? closeError.message
-            : String(closeError),
-      });
+    } catch {
+      // ignore
     }
     cachedChannel = null;
   }
   if (cachedConnection) {
     try {
       await cachedConnection.close();
-    } catch (closeError) {
-      rabbitmqLogger.warn("Failed to close connection cleanly", {
-        error:
-          closeError instanceof Error
-            ? closeError.message
-            : String(closeError),
-      });
+    } catch {
+      // ignore
     }
     cachedConnection = null;
   }

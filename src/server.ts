@@ -1,21 +1,17 @@
-import { startInsightsQueueConsumer } from "./consumer/insightsQueueConsumer.js";
+import { startWorkflowGenerationConsumer } from "./consumer/workflowGenerationConsumer.js";
 import {
   closeRabbitMqResources,
   connectToRabbitMq,
 } from "./infrastructure/rabbitmq.js";
-import {
-  connectToInsightsDatabase,
-  disconnectFromInsightsDatabase,
-} from "./infrastructure/mongo.js";
 import { env } from "./config/env.js";
 import { createScopedLogger } from "./utils/logger.js";
 
 const bootLogger = createScopedLogger("server");
 
-const bootstrapInsightsMicroservice = async (): Promise<void> => {
+const bootstrapWorkflowLlmMicroservice = async (): Promise<void> => {
   const llmSummary = `provider=${env.LLM_PROVIDER} model=${env.RESOLVED_LLM_MODEL}`;
 
-  bootLogger.info(`Starting insights-ms (${llmSummary})`, {
+  bootLogger.info(`Starting llm-ms workflow generator (${llmSummary})`, {
     nodeEnv: env.NODE_ENV,
     llmProvider: env.LLM_PROVIDER,
     llmModel: env.RESOLVED_LLM_MODEL,
@@ -23,21 +19,16 @@ const bootstrapInsightsMicroservice = async (): Promise<void> => {
     langsmithProject: env.LANGSMITH_PROJECT,
   });
 
-  await connectToInsightsDatabase();
   await connectToRabbitMq();
-  await startInsightsQueueConsumer();
+  await startWorkflowGenerationConsumer();
 
-  bootLogger.info(`insights-ms is running (${llmSummary})`, {
-    llmProvider: env.LLM_PROVIDER,
-    llmModel: env.RESOLVED_LLM_MODEL,
-  });
+  bootLogger.info(`llm-ms is running (${llmSummary})`);
 };
 
 const handleShutdownSignal = async (signal: NodeJS.Signals): Promise<void> => {
   bootLogger.info("Shutdown signal received", { signal });
   try {
     await closeRabbitMqResources();
-    await disconnectFromInsightsDatabase();
   } catch (shutdownError) {
     bootLogger.error("Error during shutdown", {
       error:
@@ -70,11 +61,11 @@ process.on("uncaughtException", (uncaughtError) => {
   bootLogger.error("Uncaught exception", { error: uncaughtError.message });
 });
 
-bootstrapInsightsMicroservice().catch((startupError: unknown) => {
+bootstrapWorkflowLlmMicroservice().catch((startupError: unknown) => {
   const errorMessage =
     startupError instanceof Error
       ? startupError.message
       : String(startupError);
-  bootLogger.error("Failed to bootstrap insights-ms", { error: errorMessage });
+  bootLogger.error("Failed to bootstrap llm-ms", { error: errorMessage });
   process.exit(1);
 });
