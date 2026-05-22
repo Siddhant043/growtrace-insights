@@ -13,6 +13,8 @@ export const WORKFLOW_ACTION_TYPES = [
 export const workflowGenerationStructuredSelectorSchema = z
   .object({
     strategy: z.enum(["role", "label", "text", "testId", "css", "xpath"]),
+    scope: z.enum(["page", "dialog"]).optional(),
+    exact: z.boolean().optional(),
     role: z.string().optional(),
     name: z.string().optional(),
     label: z.string().optional(),
@@ -26,6 +28,8 @@ export const workflowGenerationStructuredSelectorSchema = z
 
 const workflowGenerationSelectorObjectSchema = z.object({
   strategy: z.enum(["role", "label", "text", "testId", "css", "xpath"]),
+  scope: z.enum(["page", "dialog"]).optional(),
+  exact: z.boolean().optional(),
   role: z.string().optional(),
   name: z.string().optional(),
   label: z.string().optional(),
