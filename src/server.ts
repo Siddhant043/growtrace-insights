@@ -1,9 +1,13 @@
+import { startNarrationGenerationConsumer } from "./consumer/narrationGenerationConsumer.js";
+import { startNarrationCaptionConsumer } from "./consumer/narrationCaptionConsumer.js";
+import { startNarrationTtsConsumer } from "./consumer/narrationTtsConsumer.js";
 import { startWorkflowGenerationConsumer } from "./consumer/workflowGenerationConsumer.js";
 import {
   closeRabbitMqResources,
   connectToRabbitMq,
 } from "./infrastructure/rabbitmq.js";
 import { env } from "./config/env.js";
+import { isLangSmithTracingEnabled } from "./observability/langsmith-tracing.js";
 import { createScopedLogger } from "./utils/logger.js";
 
 const bootLogger = createScopedLogger("server");
@@ -16,11 +20,21 @@ const bootstrapWorkflowLlmMicroservice = async (): Promise<void> => {
     llmProvider: env.LLM_PROVIDER,
     llmModel: env.RESOLVED_LLM_MODEL,
     langsmithTracing: env.LANGSMITH_TRACING,
+    langsmithTracingActive: isLangSmithTracingEnabled(),
     langsmithProject: env.LANGSMITH_PROJECT,
   });
 
+  if (env.LANGSMITH_TRACING && !env.LANGSMITH_API_KEY) {
+    bootLogger.warn(
+      "LANGSMITH_TRACING is true but LANGSMITH_API_KEY is missing; LangSmith export is disabled",
+    );
+  }
+
   await connectToRabbitMq();
   await startWorkflowGenerationConsumer();
+  await startNarrationGenerationConsumer();
+  await startNarrationTtsConsumer();
+  await startNarrationCaptionConsumer();
 
   bootLogger.info(`llm-ms is running (${llmSummary})`);
 };

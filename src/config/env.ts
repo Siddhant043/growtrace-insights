@@ -1,6 +1,8 @@
 import { config as loadDotenvFile } from "dotenv";
 import { z } from "zod";
 
+import { applyLangSmithEnvironment } from "../observability/langsmith-tracing.js";
+
 loadDotenvFile({ path: ".env" });
 loadDotenvFile();
 
@@ -81,6 +83,118 @@ const workflowLlmEnvironmentSchema = z
     WORKFLOW_LLM_PREFETCH: z.coerce.number().int().min(1).max(100).default(1),
     WORKFLOW_LLM_MAX_RETRIES: z.coerce.number().int().min(0).max(10).default(3),
 
+    NARRATION_LLM_REQUEST_QUEUE: z
+      .string()
+      .min(1)
+      .default("narration.generate.request"),
+    NARRATION_LLM_RESPONSE_QUEUE: z
+      .string()
+      .min(1)
+      .default("narration.generate.response"),
+    NARRATION_LLM_REQUEST_ROUTING_KEY: z
+      .string()
+      .min(1)
+      .default("narration.generate.request"),
+    NARRATION_LLM_RESPONSE_ROUTING_KEY: z
+      .string()
+      .min(1)
+      .default("narration.generate.response"),
+    NARRATION_LLM_DLQ: z.string().min(1).default("narration.generate.dlq"),
+    NARRATION_LLM_DL_ROUTING_KEY: z
+      .string()
+      .min(1)
+      .default("narration.generate.dead"),
+    NARRATION_LLM_PREFETCH: z.coerce.number().int().min(1).max(100).default(1),
+    NARRATION_LLM_MAX_RETRIES: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(10)
+      .default(3),
+
+    NARRATION_TTS_REQUEST_QUEUE: z
+      .string()
+      .min(1)
+      .default("narration.tts.request"),
+    NARRATION_TTS_RESPONSE_QUEUE: z
+      .string()
+      .min(1)
+      .default("narration.tts.response"),
+    NARRATION_TTS_REQUEST_ROUTING_KEY: z
+      .string()
+      .min(1)
+      .default("narration.tts.request"),
+    NARRATION_TTS_RESPONSE_ROUTING_KEY: z
+      .string()
+      .min(1)
+      .default("narration.tts.response"),
+    NARRATION_TTS_DLQ: z.string().min(1).default("narration.tts.dlq"),
+    NARRATION_TTS_DL_ROUTING_KEY: z
+      .string()
+      .min(1)
+      .default("narration.tts.dead"),
+    NARRATION_TTS_PREFETCH: z.coerce.number().int().min(1).max(100).default(1),
+    NARRATION_TTS_MAX_RETRIES: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(10)
+      .default(3),
+
+    TTS_MODEL: z.string().default("tts-1"),
+    TTS_VOICE: z.string().default("alloy"),
+    TTS_DISABLE: z
+      .string()
+      .optional()
+      .transform((value) => value === "true"),
+
+    NARRATION_CAPTION_REQUEST_QUEUE: z
+      .string()
+      .min(1)
+      .default("narration.caption.request"),
+    NARRATION_CAPTION_RESPONSE_QUEUE: z
+      .string()
+      .min(1)
+      .default("narration.caption.response"),
+    NARRATION_CAPTION_REQUEST_ROUTING_KEY: z
+      .string()
+      .min(1)
+      .default("narration.caption.request"),
+    NARRATION_CAPTION_RESPONSE_ROUTING_KEY: z
+      .string()
+      .min(1)
+      .default("narration.caption.response"),
+    NARRATION_CAPTION_DLQ: z.string().min(1).default("narration.caption.dlq"),
+    NARRATION_CAPTION_DL_ROUTING_KEY: z
+      .string()
+      .min(1)
+      .default("narration.caption.dead"),
+    NARRATION_CAPTION_PREFETCH: z.coerce.number().int().min(1).max(100).default(1),
+    NARRATION_CAPTION_MAX_RETRIES: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(10)
+      .default(3),
+
+    WHISPER_MODEL: z.string().default("whisper-1"),
+    WHISPER_DISABLE: z
+      .string()
+      .optional()
+      .transform((value) => value === "true"),
+
+    NARRATION_DISABLE_LLM: z
+      .string()
+      .optional()
+      .transform((value) => value === "true"),
+    NARRATION_LLM_TEMPERATURE: z.coerce.number().min(0).max(2).default(0.3),
+    NARRATION_LLM_MAX_TOKENS: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(8192)
+      .default(4096),
+
     LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 
     LANGSMITH_TRACING: z
@@ -123,9 +237,38 @@ const workflowLlmEnvironmentSchema = z
         path: ["LLM_MODEL"],
       });
     }
+
+    if (!config.TTS_DISABLE && !config.OPENAI_API_KEY) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "OPENAI_API_KEY is required for narration TTS when TTS_DISABLE=false (independent of LLM_PROVIDER)",
+        path: ["OPENAI_API_KEY"],
+      });
+    }
+
+    if (!config.WHISPER_DISABLE && !config.OPENAI_API_KEY) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "OPENAI_API_KEY is required for narration captions when WHISPER_DISABLE=false (independent of LLM_PROVIDER)",
+        path: ["OPENAI_API_KEY"],
+      });
+    }
   });
 
-const parsedEnvironment = workflowLlmEnvironmentSchema.safeParse(process.env);
+const parsedEnvironment = workflowLlmEnvironmentSchema.safeParse({
+  ...process.env,
+  NARRATION_DISABLE_LLM:
+    process.env.NARRATION_DISABLE_LLM ??
+    (process.env.NODE_ENV === "test" ? "true" : "false"),
+  TTS_DISABLE:
+    process.env.TTS_DISABLE ??
+    (process.env.NODE_ENV === "test" ? "true" : "false"),
+  WHISPER_DISABLE:
+    process.env.WHISPER_DISABLE ??
+    (process.env.NODE_ENV === "test" ? "true" : "false"),
+});
 
 if (!parsedEnvironment.success) {
   const formattedIssues = parsedEnvironment.error.issues
@@ -141,3 +284,9 @@ export const env = {
   RESOLVED_LLM_MODEL:
     rawConfig.LLM_MODEL ?? DEFAULT_MODEL_PER_PROVIDER[rawConfig.LLM_PROVIDER],
 };
+
+applyLangSmithEnvironment({
+  tracing: env.LANGSMITH_TRACING,
+  apiKey: env.LANGSMITH_API_KEY,
+  project: env.LANGSMITH_PROJECT,
+});

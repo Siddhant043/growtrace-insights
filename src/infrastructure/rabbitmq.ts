@@ -19,7 +19,10 @@ const buildRabbitMqConnectionUrl = (): string => {
 
 let cachedConnection: ChannelModel | null = null;
 let cachedChannel: Channel | null = null;
-let topologyAssertedFlag = false;
+let workflowTopologyAssertedFlag = false;
+let narrationTopologyAssertedFlag = false;
+let narrationTtsTopologyAssertedFlag = false;
+let narrationCaptionTopologyAssertedFlag = false;
 
 export const connectToRabbitMq = async (): Promise<ChannelModel> => {
   if (cachedConnection) {
@@ -42,7 +45,10 @@ export const connectToRabbitMq = async (): Promise<ChannelModel> => {
     rabbitmqLogger.warn("RabbitMQ connection closed");
     cachedConnection = null;
     cachedChannel = null;
-    topologyAssertedFlag = false;
+    workflowTopologyAssertedFlag = false;
+    narrationTopologyAssertedFlag = false;
+    narrationTtsTopologyAssertedFlag = false;
+    narrationCaptionTopologyAssertedFlag = false;
   });
 
   rabbitmqLogger.info("Connected to RabbitMQ");
@@ -62,7 +68,7 @@ export const getRabbitMqChannel = async (): Promise<Channel> => {
 
 export const assertWorkflowLlmTopology = async (): Promise<Channel> => {
   const channel = await getRabbitMqChannel();
-  if (topologyAssertedFlag) {
+  if (workflowTopologyAssertedFlag) {
     return channel;
   }
 
@@ -106,8 +112,59 @@ export const assertWorkflowLlmTopology = async (): Promise<Channel> => {
     env.WORKFLOW_LLM_RESPONSE_ROUTING_KEY,
   );
 
-  topologyAssertedFlag = true;
+  workflowTopologyAssertedFlag = true;
   rabbitmqLogger.info("Workflow LLM RabbitMQ topology asserted");
+  return channel;
+};
+
+export const assertNarrationLlmTopology = async (): Promise<Channel> => {
+  const channel = await getRabbitMqChannel();
+  if (narrationTopologyAssertedFlag) {
+    return channel;
+  }
+
+  await channel.assertExchange(env.WORKFLOW_LLM_EXCHANGE, "topic", {
+    durable: true,
+  });
+  await channel.assertExchange(env.WORKFLOW_LLM_DLX_EXCHANGE, "topic", {
+    durable: true,
+  });
+
+  await channel.assertQueue(env.NARRATION_LLM_DLQ, { durable: true });
+  await channel.bindQueue(
+    env.NARRATION_LLM_DLQ,
+    env.WORKFLOW_LLM_DLX_EXCHANGE,
+    env.NARRATION_LLM_DL_ROUTING_KEY,
+  );
+
+  await channel.assertQueue(env.NARRATION_LLM_REQUEST_QUEUE, {
+    durable: true,
+    arguments: {
+      "x-dead-letter-exchange": env.WORKFLOW_LLM_DLX_EXCHANGE,
+      "x-dead-letter-routing-key": env.NARRATION_LLM_DL_ROUTING_KEY,
+    },
+  });
+  await channel.bindQueue(
+    env.NARRATION_LLM_REQUEST_QUEUE,
+    env.WORKFLOW_LLM_EXCHANGE,
+    env.NARRATION_LLM_REQUEST_ROUTING_KEY,
+  );
+
+  await channel.assertQueue(env.NARRATION_LLM_RESPONSE_QUEUE, {
+    durable: true,
+    arguments: {
+      "x-dead-letter-exchange": env.WORKFLOW_LLM_DLX_EXCHANGE,
+      "x-dead-letter-routing-key": env.NARRATION_LLM_DL_ROUTING_KEY,
+    },
+  });
+  await channel.bindQueue(
+    env.NARRATION_LLM_RESPONSE_QUEUE,
+    env.WORKFLOW_LLM_EXCHANGE,
+    env.NARRATION_LLM_RESPONSE_ROUTING_KEY,
+  );
+
+  narrationTopologyAssertedFlag = true;
+  rabbitmqLogger.info("Narration LLM RabbitMQ topology asserted");
   return channel;
 };
 
@@ -119,6 +176,147 @@ export const publishWorkflowGenerationResponse = async (
   channel.publish(
     env.WORKFLOW_LLM_EXCHANGE,
     env.WORKFLOW_LLM_RESPONSE_ROUTING_KEY,
+    body,
+    { contentType: "application/json", persistent: true },
+  );
+};
+
+export const publishNarrationGenerationResponse = async (
+  payload: unknown,
+): Promise<void> => {
+  const channel = await assertNarrationLlmTopology();
+  const body = Buffer.from(JSON.stringify(payload), "utf-8");
+  channel.publish(
+    env.WORKFLOW_LLM_EXCHANGE,
+    env.NARRATION_LLM_RESPONSE_ROUTING_KEY,
+    body,
+    { contentType: "application/json", persistent: true },
+  );
+};
+
+export const assertNarrationTtsTopology = async (): Promise<Channel> => {
+  const channel = await getRabbitMqChannel();
+  if (narrationTtsTopologyAssertedFlag) {
+    return channel;
+  }
+
+  await channel.assertExchange(env.WORKFLOW_LLM_EXCHANGE, "topic", {
+    durable: true,
+  });
+  await channel.assertExchange(env.WORKFLOW_LLM_DLX_EXCHANGE, "topic", {
+    durable: true,
+  });
+
+  await channel.assertQueue(env.NARRATION_TTS_DLQ, { durable: true });
+  await channel.bindQueue(
+    env.NARRATION_TTS_DLQ,
+    env.WORKFLOW_LLM_DLX_EXCHANGE,
+    env.NARRATION_TTS_DL_ROUTING_KEY,
+  );
+
+  await channel.assertQueue(env.NARRATION_TTS_REQUEST_QUEUE, {
+    durable: true,
+    arguments: {
+      "x-dead-letter-exchange": env.WORKFLOW_LLM_DLX_EXCHANGE,
+      "x-dead-letter-routing-key": env.NARRATION_TTS_DL_ROUTING_KEY,
+    },
+  });
+  await channel.bindQueue(
+    env.NARRATION_TTS_REQUEST_QUEUE,
+    env.WORKFLOW_LLM_EXCHANGE,
+    env.NARRATION_TTS_REQUEST_ROUTING_KEY,
+  );
+
+  await channel.assertQueue(env.NARRATION_TTS_RESPONSE_QUEUE, {
+    durable: true,
+    arguments: {
+      "x-dead-letter-exchange": env.WORKFLOW_LLM_DLX_EXCHANGE,
+      "x-dead-letter-routing-key": env.NARRATION_TTS_DL_ROUTING_KEY,
+    },
+  });
+  await channel.bindQueue(
+    env.NARRATION_TTS_RESPONSE_QUEUE,
+    env.WORKFLOW_LLM_EXCHANGE,
+    env.NARRATION_TTS_RESPONSE_ROUTING_KEY,
+  );
+
+  narrationTtsTopologyAssertedFlag = true;
+  rabbitmqLogger.info("Narration TTS RabbitMQ topology asserted");
+  return channel;
+};
+
+export const publishNarrationTtsResponse = async (
+  payload: unknown,
+): Promise<void> => {
+  const channel = await assertNarrationTtsTopology();
+  const body = Buffer.from(JSON.stringify(payload), "utf-8");
+  channel.publish(
+    env.WORKFLOW_LLM_EXCHANGE,
+    env.NARRATION_TTS_RESPONSE_ROUTING_KEY,
+    body,
+    { contentType: "application/json", persistent: true },
+  );
+};
+
+export const assertNarrationCaptionTopology = async (): Promise<Channel> => {
+  const channel = await getRabbitMqChannel();
+  if (narrationCaptionTopologyAssertedFlag) {
+    return channel;
+  }
+
+  await channel.assertExchange(env.WORKFLOW_LLM_EXCHANGE, "topic", {
+    durable: true,
+  });
+  await channel.assertExchange(env.WORKFLOW_LLM_DLX_EXCHANGE, "topic", {
+    durable: true,
+  });
+
+  await channel.assertQueue(env.NARRATION_CAPTION_DLQ, { durable: true });
+  await channel.bindQueue(
+    env.NARRATION_CAPTION_DLQ,
+    env.WORKFLOW_LLM_DLX_EXCHANGE,
+    env.NARRATION_CAPTION_DL_ROUTING_KEY,
+  );
+
+  await channel.assertQueue(env.NARRATION_CAPTION_REQUEST_QUEUE, {
+    durable: true,
+    arguments: {
+      "x-dead-letter-exchange": env.WORKFLOW_LLM_DLX_EXCHANGE,
+      "x-dead-letter-routing-key": env.NARRATION_CAPTION_DL_ROUTING_KEY,
+    },
+  });
+  await channel.bindQueue(
+    env.NARRATION_CAPTION_REQUEST_QUEUE,
+    env.WORKFLOW_LLM_EXCHANGE,
+    env.NARRATION_CAPTION_REQUEST_ROUTING_KEY,
+  );
+
+  await channel.assertQueue(env.NARRATION_CAPTION_RESPONSE_QUEUE, {
+    durable: true,
+    arguments: {
+      "x-dead-letter-exchange": env.WORKFLOW_LLM_DLX_EXCHANGE,
+      "x-dead-letter-routing-key": env.NARRATION_CAPTION_DL_ROUTING_KEY,
+    },
+  });
+  await channel.bindQueue(
+    env.NARRATION_CAPTION_RESPONSE_QUEUE,
+    env.WORKFLOW_LLM_EXCHANGE,
+    env.NARRATION_CAPTION_RESPONSE_ROUTING_KEY,
+  );
+
+  narrationCaptionTopologyAssertedFlag = true;
+  rabbitmqLogger.info("Narration caption RabbitMQ topology asserted");
+  return channel;
+};
+
+export const publishNarrationCaptionResponse = async (
+  payload: unknown,
+): Promise<void> => {
+  const channel = await assertNarrationCaptionTopology();
+  const body = Buffer.from(JSON.stringify(payload), "utf-8");
+  channel.publish(
+    env.WORKFLOW_LLM_EXCHANGE,
+    env.NARRATION_CAPTION_RESPONSE_ROUTING_KEY,
     body,
     { contentType: "application/json", persistent: true },
   );
@@ -141,5 +339,8 @@ export const closeRabbitMqResources = async (): Promise<void> => {
     }
     cachedConnection = null;
   }
-  topologyAssertedFlag = false;
+  workflowTopologyAssertedFlag = false;
+  narrationTopologyAssertedFlag = false;
+  narrationTtsTopologyAssertedFlag = false;
+  narrationCaptionTopologyAssertedFlag = false;
 };

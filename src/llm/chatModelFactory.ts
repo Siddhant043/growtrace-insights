@@ -6,66 +6,101 @@ import { ChatOpenAI } from "@langchain/openai";
 
 import { env } from "../config/env.js";
 
-let cachedChatModel: BaseChatModel | null = null;
+export type ChatModelBuildOptions = {
+  temperature?: number;
+  maxTokens?: number;
+};
 
-const buildOpenAIChatModel = (): BaseChatModel =>
+let cachedWorkflowChatModel: BaseChatModel | null = null;
+let cachedNarrationChatModel: BaseChatModel | null = null;
+
+const buildOpenAIChatModel = (
+  temperature: number,
+  maxTokens: number,
+): BaseChatModel =>
   new ChatOpenAI({
     apiKey: env.OPENAI_API_KEY,
     model: env.RESOLVED_LLM_MODEL,
-    temperature: env.LLM_TEMPERATURE,
-    maxTokens: env.LLM_MAX_TOKENS,
+    temperature,
+    maxTokens,
     timeout: env.LLM_REQUEST_TIMEOUT_MS,
     configuration: env.OPENAI_BASE_URL
       ? { baseURL: env.OPENAI_BASE_URL }
       : undefined,
   });
 
-const buildAnthropicChatModel = (): BaseChatModel =>
+const buildAnthropicChatModel = (
+  temperature: number,
+  maxTokens: number,
+): BaseChatModel =>
   new ChatAnthropic({
     apiKey: env.ANTHROPIC_API_KEY,
     model: env.RESOLVED_LLM_MODEL,
-    temperature: env.LLM_TEMPERATURE,
-    maxTokens: env.LLM_MAX_TOKENS,
+    temperature,
+    maxTokens,
     clientOptions: {
       timeout: env.LLM_REQUEST_TIMEOUT_MS,
     },
   });
 
-const buildGoogleGenAIChatModel = (): BaseChatModel =>
+const buildGoogleGenAIChatModel = (
+  temperature: number,
+  maxTokens: number,
+): BaseChatModel =>
   new ChatGoogleGenerativeAI({
     apiKey: env.GOOGLE_API_KEY,
     model: env.RESOLVED_LLM_MODEL,
-    temperature: env.LLM_TEMPERATURE,
-    maxOutputTokens: env.LLM_MAX_TOKENS,
+    temperature,
+    maxOutputTokens: maxTokens,
   });
 
-const buildOllamaChatModel = (): BaseChatModel =>
+const buildOllamaChatModel = (
+  temperature: number,
+  maxTokens: number,
+): BaseChatModel =>
   new ChatOllama({
     baseUrl: env.OLLAMA_BASE_URL,
     model: env.RESOLVED_LLM_MODEL,
-    temperature: env.LLM_TEMPERATURE,
-    numPredict: env.LLM_MAX_TOKENS,
+    temperature,
+    numPredict: maxTokens,
   });
 
-export const getChatModel = (): BaseChatModel => {
-  if (cachedChatModel) {
-    return cachedChatModel;
-  }
+export const buildChatModel = (
+  options?: ChatModelBuildOptions,
+): BaseChatModel => {
+  const temperature = options?.temperature ?? env.LLM_TEMPERATURE;
+  const maxTokens = options?.maxTokens ?? env.LLM_MAX_TOKENS;
 
   switch (env.LLM_PROVIDER) {
     case "openai":
-      cachedChatModel = buildOpenAIChatModel();
-      break;
+      return buildOpenAIChatModel(temperature, maxTokens);
     case "anthropic":
-      cachedChatModel = buildAnthropicChatModel();
-      break;
+      return buildAnthropicChatModel(temperature, maxTokens);
     case "google":
-      cachedChatModel = buildGoogleGenAIChatModel();
-      break;
+      return buildGoogleGenAIChatModel(temperature, maxTokens);
     case "ollama":
-      cachedChatModel = buildOllamaChatModel();
-      break;
+      return buildOllamaChatModel(temperature, maxTokens);
   }
+};
 
-  return cachedChatModel;
+export const getChatModel = (): BaseChatModel => {
+  if (!cachedWorkflowChatModel) {
+    cachedWorkflowChatModel = buildChatModel();
+  }
+  return cachedWorkflowChatModel;
+};
+
+export const getNarrationChatModel = (): BaseChatModel => {
+  if (!cachedNarrationChatModel) {
+    cachedNarrationChatModel = buildChatModel({
+      temperature: env.NARRATION_LLM_TEMPERATURE,
+      maxTokens: env.NARRATION_LLM_MAX_TOKENS,
+    });
+  }
+  return cachedNarrationChatModel;
+};
+
+export const resetChatModelCache = (): void => {
+  cachedWorkflowChatModel = null;
+  cachedNarrationChatModel = null;
 };
