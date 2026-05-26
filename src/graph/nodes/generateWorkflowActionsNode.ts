@@ -1,4 +1,5 @@
 import { getChatModel } from "../../llm/chatModelFactory.js";
+import { formatWorkflowGroundingBlock } from "../../llm/prompts/formatWorkflowGroundingBlock.js";
 import { workflowActionsPromptTemplate } from "../../llm/prompts/workflowActionsPrompt.js";
 import { createScopedLogger } from "../../utils/logger.js";
 import {
@@ -44,12 +45,15 @@ export const generateWorkflowActionsNode = async (
     workflowGenerationLlmOutputSchema,
   );
 
+  const groundingBlock = formatWorkflowGroundingBlock(request.grounding)
+
   const promptValue = await workflowActionsPromptTemplate.invoke({
     workflowName: request.name,
     workflowDescription: request.description,
     baseUrl: request.baseUrl,
     loginUrl: request.loginUrl ?? "(none — use base URL)",
     hasBrowserSession: request.hasBrowserSession ? "yes" : "no",
+    groundingBlock,
   });
 
   try {

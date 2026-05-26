@@ -17,7 +17,9 @@ Rules:
 - Never include passwords, API keys, or credentials in values.
 - WAIT may use value as milliseconds (e.g. "2000").
 - SCROLL may use value as "up" or "down" or pixel amount.
-- Keep steps minimal but sufficient to achieve the workflow description.`,
+- Keep steps minimal but sufficient to achieve the workflow description.
+- When grounding context is provided, only use selectors that plausibly match listed semantic elements or the DOM summary.
+- Prefer strategy "role" or "label" with names from the prioritized elements list; avoid inventing CSS selectors not supported by grounding.`,
   ],
   [
     "human",
@@ -26,6 +28,8 @@ Workflow description: {workflowDescription}
 Base URL: {baseUrl}
 Login URL: {loginUrl}
 Has saved browser session: {hasBrowserSession}
+
+{groundingBlock}
 
 Generate Playwright steps to accomplish the workflow description.`,
   ],

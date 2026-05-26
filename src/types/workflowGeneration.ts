@@ -58,6 +58,30 @@ export const workflowGenerationLlmActionSchema = z.object({
   value: z.string().optional(),
 });
 
+export const workflowGroundingElementSchema = z.object({
+  role: z.string(),
+  name: z.string().nullable(),
+  category: z.string(),
+});
+
+export const workflowGroundingExecutionStepSchema = z.object({
+  order: z.number().int().min(0),
+  action: z.string(),
+  status: z.string(),
+  selectorSummary: z.string().nullable().optional(),
+});
+
+export const workflowGroundingPayloadSchema = z.object({
+  sourceWorkflowRunId: z.string().min(1),
+  pageUrl: z.string(),
+  routes: z.array(z.string()),
+  domSummary: z.string(),
+  prioritizedElements: z.array(workflowGroundingElementSchema),
+  executionHistory: z.array(workflowGroundingExecutionStepSchema),
+  latestScreenshotUrl: z.string().nullable().optional(),
+  latestStepOrder: z.number().int().nullable().optional(),
+});
+
 export const workflowGenerationRequestSchema = z.object({
   jobId: z.string().min(1),
   workflowId: z.string().min(1),
@@ -68,6 +92,7 @@ export const workflowGenerationRequestSchema = z.object({
   baseUrl: z.string().url(),
   hasBrowserSession: z.boolean(),
   loginUrl: z.string().url().optional(),
+  grounding: workflowGroundingPayloadSchema.optional(),
 });
 
 export const workflowGenerationResponseSchema = z.object({
@@ -94,4 +119,7 @@ export type WorkflowGenerationResponse = z.infer<
 >;
 export type WorkflowGenerationAction = z.infer<
   typeof workflowGenerationActionSchema
+>;
+export type WorkflowGroundingPayload = z.infer<
+  typeof workflowGroundingPayloadSchema
 >;
