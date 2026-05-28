@@ -19,7 +19,13 @@ const getOpenAiClient = (): OpenAI => {
   return openAiClient;
 };
 
-export async function generateEmbedding(content: string): Promise<number[]> {
+export type EmbeddingResult = {
+  embedding: number[];
+  inputTokens: number;
+  totalTokens: number;
+};
+
+export async function generateEmbedding(content: string): Promise<EmbeddingResult> {
   const response = await getOpenAiClient().embeddings.create({
     model: env.EMBEDDING_MODEL,
     input: content,
@@ -29,5 +35,9 @@ export async function generateEmbedding(content: string): Promise<number[]> {
   if (!embedding) {
     throw new Error("OpenAI embeddings response returned no embedding");
   }
-  return embedding;
+  return {
+    embedding,
+    inputTokens: response.usage.prompt_tokens,
+    totalTokens: response.usage.total_tokens,
+  };
 }

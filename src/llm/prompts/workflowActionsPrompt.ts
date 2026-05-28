@@ -9,6 +9,14 @@ Supported action types: NAVIGATE, CLICK, TYPE, HOVER, SCROLL, WAIT, ASSERT.
 
 Selector strategies: role, label, text, testId, css, xpath. Prefer label or role when the page uses real <label> elements. For login forms with only placeholders (no labels), use strategy "css" (e.g. input[type="email"]) or label text that matches the placeholder exactly.
 
+Selector field mapping (critical): populate only the field that matches the chosen strategy:
+  strategy "role"   → set role (e.g. "button") and name (the accessible label, e.g. "Create Link") — never use the "text" field for this
+  strategy "label"  → set label
+  strategy "text"   → set text
+  strategy "testId" → set testId
+  strategy "css"    → set css
+  strategy "xpath"  → set xpath
+
 Rules:
 - First step should usually be NAVIGATE to baseUrl or loginUrl when authentication is needed.
 - order must be contiguous starting at 0.

@@ -15,6 +15,8 @@ export const workflowEmbeddingResponseSchema = z.object({
   embedding: z.array(z.number()).optional(),
   model: z.string().optional(),
   errorMessage: z.string().optional(),
+  inputTokens: z.number().int().optional(),
+  totalTokens: z.number().int().optional(),
 });
 
 export type WorkflowEmbeddingRequest = z.infer<typeof workflowEmbeddingRequestSchema>;

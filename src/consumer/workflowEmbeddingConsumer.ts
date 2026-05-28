@@ -58,14 +58,16 @@ const buildResponse = async (
   request: WorkflowEmbeddingRequest,
 ): Promise<WorkflowEmbeddingResponse> => {
   try {
-    const embedding = await generateEmbedding(request.content);
+    const result = await generateEmbedding(request.content);
     return {
       jobId: request.jobId,
       workflowId: request.workflowId,
       projectId: request.projectId,
       status: "completed",
-      embedding,
+      embedding: result.embedding,
       model: env.EMBEDDING_MODEL,
+      inputTokens: result.inputTokens,
+      totalTokens: result.totalTokens,
     };
   } catch (processingError) {
     const errorMessage =
