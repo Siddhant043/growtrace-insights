@@ -71,6 +71,21 @@ export const workflowGroundingExecutionStepSchema = z.object({
   selectorSummary: z.string().nullable().optional(),
 });
 
+export const workflowGroundingHealingEntrySchema = z.object({
+  stepOrder: z.number(),
+  originalSelector: z.string().nullable(),
+  appliedSelector: z.string(),
+  confidence: z.number(),
+});
+
+export const workflowGroundingRunOutcomeSchema = z.object({
+  totalRuns: z.number(),
+  successCount: z.number(),
+  failureCount: z.number(),
+  averageDurationMs: z.number().nullable(),
+  commonFailureStepOrders: z.array(z.number()),
+});
+
 export const workflowGroundingPayloadSchema = z.object({
   sourceWorkflowRunId: z.string().min(1),
   pageUrl: z.string(),
@@ -80,6 +95,8 @@ export const workflowGroundingPayloadSchema = z.object({
   executionHistory: z.array(workflowGroundingExecutionStepSchema),
   latestScreenshotUrl: z.string().nullable().optional(),
   latestStepOrder: z.number().int().nullable().optional(),
+  healingHistory: z.array(workflowGroundingHealingEntrySchema).optional(),
+  runOutcomeSummary: workflowGroundingRunOutcomeSchema.nullable().optional(),
 });
 
 export const workflowGenerationRequestSchema = z.object({
@@ -122,4 +139,10 @@ export type WorkflowGenerationAction = z.infer<
 >;
 export type WorkflowGroundingPayload = z.infer<
   typeof workflowGroundingPayloadSchema
+>;
+export type WorkflowGroundingHealingEntry = z.infer<
+  typeof workflowGroundingHealingEntrySchema
+>;
+export type WorkflowGroundingRunOutcome = z.infer<
+  typeof workflowGroundingRunOutcomeSchema
 >;

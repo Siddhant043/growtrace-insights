@@ -23,6 +23,7 @@ let workflowTopologyAssertedFlag = false;
 let narrationTopologyAssertedFlag = false;
 let narrationTtsTopologyAssertedFlag = false;
 let narrationCaptionTopologyAssertedFlag = false;
+let embeddingTopologyAssertedFlag = false;
 
 export const connectToRabbitMq = async (): Promise<ChannelModel> => {
   if (cachedConnection) {
@@ -49,6 +50,7 @@ export const connectToRabbitMq = async (): Promise<ChannelModel> => {
     narrationTopologyAssertedFlag = false;
     narrationTtsTopologyAssertedFlag = false;
     narrationCaptionTopologyAssertedFlag = false;
+    embeddingTopologyAssertedFlag = false;
   });
 
   rabbitmqLogger.info("Connected to RabbitMQ");
@@ -322,6 +324,57 @@ export const publishNarrationCaptionResponse = async (
   );
 };
 
+export const assertWorkflowEmbeddingTopology = async (): Promise<Channel> => {
+  const channel = await getRabbitMqChannel();
+  if (embeddingTopologyAssertedFlag) {
+    return channel;
+  }
+
+  await channel.assertExchange(env.WORKFLOW_LLM_EXCHANGE, "topic", {
+    durable: true,
+  });
+  await channel.assertExchange(env.WORKFLOW_LLM_DLX_EXCHANGE, "topic", {
+    durable: true,
+  });
+
+  await channel.assertQueue(env.WORKFLOW_EMBEDDING_DLQ, { durable: true });
+  await channel.bindQueue(
+    env.WORKFLOW_EMBEDDING_DLQ,
+    env.WORKFLOW_LLM_DLX_EXCHANGE,
+    env.WORKFLOW_EMBEDDING_DL_ROUTING_KEY,
+  );
+
+  await channel.assertQueue(env.WORKFLOW_EMBEDDING_REQUEST_QUEUE, {
+    durable: true,
+    arguments: {
+      "x-dead-letter-exchange": env.WORKFLOW_LLM_DLX_EXCHANGE,
+      "x-dead-letter-routing-key": env.WORKFLOW_EMBEDDING_DL_ROUTING_KEY,
+    },
+  });
+  await channel.bindQueue(
+    env.WORKFLOW_EMBEDDING_REQUEST_QUEUE,
+    env.WORKFLOW_LLM_EXCHANGE,
+    env.WORKFLOW_EMBEDDING_REQUEST_QUEUE,
+  );
+
+  embeddingTopologyAssertedFlag = true;
+  rabbitmqLogger.info("Workflow embedding RabbitMQ topology asserted");
+  return channel;
+};
+
+export const publishWorkflowEmbeddingResponse = async (
+  payload: unknown,
+): Promise<void> => {
+  const channel = await assertWorkflowEmbeddingTopology();
+  const body = Buffer.from(JSON.stringify(payload), "utf-8");
+  channel.publish(
+    env.WORKFLOW_LLM_EXCHANGE,
+    env.WORKFLOW_EMBEDDING_RESPONSE_ROUTING_KEY,
+    body,
+    { contentType: "application/json", persistent: true },
+  );
+};
+
 export const closeRabbitMqResources = async (): Promise<void> => {
   if (cachedChannel) {
     try {
@@ -343,4 +396,5 @@ export const closeRabbitMqResources = async (): Promise<void> => {
   narrationTopologyAssertedFlag = false;
   narrationTtsTopologyAssertedFlag = false;
   narrationCaptionTopologyAssertedFlag = false;
+  embeddingTopologyAssertedFlag = false;
 };

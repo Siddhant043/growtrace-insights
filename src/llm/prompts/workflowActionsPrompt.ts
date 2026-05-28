@@ -19,7 +19,9 @@ Rules:
 - SCROLL may use value as "up" or "down" or pixel amount.
 - Keep steps minimal but sufficient to achieve the workflow description.
 - When grounding context is provided, only use selectors that plausibly match listed semantic elements or the DOM summary.
-- Prefer strategy "role" or "label" with names from the prioritized elements list; avoid inventing CSS selectors not supported by grounding.`,
+- Prefer strategy "role" or "label" with names from the prioritized elements list; avoid inventing CSS selectors not supported by grounding.
+- HEALED SELECTORS: If the grounding includes "Healed Selectors", prefer those selector patterns for the affected steps. They reflect the current DOM state after healing was confirmed to work.
+- FAILURE PATTERNS: If the grounding includes "Run Outcome Summary" with commonly-failing step orders, apply extra care when generating actions for those steps. Prefer more robust selectors (aria-label, data-testid, role+name) over positional or text-based ones.`,
   ],
   [
     "human",

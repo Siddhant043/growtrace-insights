@@ -177,6 +177,29 @@ const workflowLlmEnvironmentSchema = z
       .max(10)
       .default(3),
 
+    WORKFLOW_EMBEDDING_REQUEST_QUEUE: z
+      .string()
+      .min(1)
+      .default("workflow.embedding.request"),
+    WORKFLOW_EMBEDDING_RESPONSE_ROUTING_KEY: z
+      .string()
+      .min(1)
+      .default("workflow.embedding.response"),
+    WORKFLOW_EMBEDDING_DLQ: z.string().min(1).default("workflow.embedding.dlq"),
+    WORKFLOW_EMBEDDING_DL_ROUTING_KEY: z
+      .string()
+      .min(1)
+      .default("workflow.embedding.dlq"),
+    WORKFLOW_EMBEDDING_PREFETCH: z.coerce.number().int().min(1).max(100).default(2),
+    WORKFLOW_EMBEDDING_MAX_RETRIES: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(10)
+      .default(3),
+    EMBEDDING_MODEL: z.string().default("text-embedding-3-small"),
+    EMBEDDING_DIMENSIONS: z.coerce.number().int().min(1).default(1536),
+
     WHISPER_MODEL: z.string().default("whisper-1"),
     WHISPER_DISABLE: z
       .string()

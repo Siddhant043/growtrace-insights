@@ -2,6 +2,7 @@ import { startNarrationGenerationConsumer } from "./consumer/narrationGeneration
 import { startNarrationCaptionConsumer } from "./consumer/narrationCaptionConsumer.js";
 import { startNarrationTtsConsumer } from "./consumer/narrationTtsConsumer.js";
 import { startWorkflowGenerationConsumer } from "./consumer/workflowGenerationConsumer.js";
+import { startWorkflowEmbeddingConsumer } from "./consumer/workflowEmbeddingConsumer.js";
 import {
   closeRabbitMqResources,
   connectToRabbitMq,
@@ -35,6 +36,7 @@ const bootstrapWorkflowLlmMicroservice = async (): Promise<void> => {
   await startNarrationGenerationConsumer();
   await startNarrationTtsConsumer();
   await startNarrationCaptionConsumer();
+  await startWorkflowEmbeddingConsumer();
 
   bootLogger.info(`llm-ms is running (${llmSummary})`);
 };
