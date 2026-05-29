@@ -24,7 +24,7 @@ Rules:
 - CLICK, HOVER, TYPE, ASSERT require a valid selector for their strategy.
 - Never include passwords, API keys, or credentials in values.
 - WAIT may use value as milliseconds (e.g. "2000").
-- SCROLL may use value as "up" or "down" or pixel amount.
+- SCROLL may scroll the page. To scroll a specific element or section into view, provide a valid selector (using one of the selector strategies). Otherwise, use value as "up", "down", or a pixel amount (e.g. "500").
 - Keep steps minimal but sufficient to achieve the workflow description.
 - When grounding context is provided, only use selectors that plausibly match listed semantic elements or the DOM summary.
 - Prefer strategy "role" or "label" with names from the prioritized elements list; avoid inventing CSS selectors not supported by grounding.
