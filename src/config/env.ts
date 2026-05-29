@@ -206,6 +206,15 @@ const workflowLlmEnvironmentSchema = z
       .optional()
       .transform((value) => value === "true"),
 
+    VARIANT_SCRIPT_REQUEST_QUEUE: z.string().min(1).default("variant-script-generate-request"),
+    VARIANT_SCRIPT_RESPONSE_QUEUE: z.string().min(1).default("variant-script-generate-response"),
+    VARIANT_SCRIPT_DLQ: z.string().min(1).default("variant-script-generate-dlq"),
+    VARIANT_SCRIPT_REQUEST_ROUTING_KEY: z.string().min(1).default("variant.script.generate.request"),
+    VARIANT_SCRIPT_RESPONSE_ROUTING_KEY: z.string().min(1).default("variant.script.generate.response"),
+    VARIANT_SCRIPT_DL_ROUTING_KEY: z.string().min(1).default("variant.script.generate.dlq"),
+    VARIANT_SCRIPT_PREFETCH: z.coerce.number().int().min(1).max(100).default(5),
+    VARIANT_SCRIPT_MAX_RETRIES: z.coerce.number().int().min(0).max(10).default(2),
+
     NARRATION_DISABLE_LLM: z
       .string()
       .optional()

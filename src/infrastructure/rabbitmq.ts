@@ -24,6 +24,7 @@ let narrationTopologyAssertedFlag = false;
 let narrationTtsTopologyAssertedFlag = false;
 let narrationCaptionTopologyAssertedFlag = false;
 let embeddingTopologyAssertedFlag = false;
+let variantScriptTopologyAssertedFlag = false;
 
 export const connectToRabbitMq = async (): Promise<ChannelModel> => {
   if (cachedConnection) {
@@ -51,6 +52,7 @@ export const connectToRabbitMq = async (): Promise<ChannelModel> => {
     narrationTtsTopologyAssertedFlag = false;
     narrationCaptionTopologyAssertedFlag = false;
     embeddingTopologyAssertedFlag = false;
+    variantScriptTopologyAssertedFlag = false;
   });
 
   rabbitmqLogger.info("Connected to RabbitMQ");
@@ -375,6 +377,50 @@ export const publishWorkflowEmbeddingResponse = async (
   );
 };
 
+export const assertVariantScriptTopology = async (): Promise<Channel> => {
+  const channel = await getRabbitMqChannel();
+  if (variantScriptTopologyAssertedFlag) {
+    return channel;
+  }
+
+  await channel.assertExchange(env.WORKFLOW_LLM_EXCHANGE, "topic", { durable: true });
+  await channel.assertExchange(env.WORKFLOW_LLM_DLX_EXCHANGE, "topic", { durable: true });
+
+  await channel.assertQueue(env.VARIANT_SCRIPT_DLQ, { durable: true });
+  await channel.bindQueue(env.VARIANT_SCRIPT_DLQ, env.WORKFLOW_LLM_DLX_EXCHANGE, env.VARIANT_SCRIPT_DL_ROUTING_KEY);
+
+  await channel.assertQueue(env.VARIANT_SCRIPT_REQUEST_QUEUE, {
+    durable: true,
+    arguments: {
+      "x-dead-letter-exchange": env.WORKFLOW_LLM_DLX_EXCHANGE,
+      "x-dead-letter-routing-key": env.VARIANT_SCRIPT_DL_ROUTING_KEY,
+    },
+  });
+  await channel.bindQueue(env.VARIANT_SCRIPT_REQUEST_QUEUE, env.WORKFLOW_LLM_EXCHANGE, env.VARIANT_SCRIPT_REQUEST_ROUTING_KEY);
+
+  await channel.assertQueue(env.VARIANT_SCRIPT_RESPONSE_QUEUE, {
+    durable: true,
+    arguments: {
+      "x-dead-letter-exchange": env.WORKFLOW_LLM_DLX_EXCHANGE,
+      "x-dead-letter-routing-key": env.VARIANT_SCRIPT_DL_ROUTING_KEY,
+    },
+  });
+  await channel.bindQueue(env.VARIANT_SCRIPT_RESPONSE_QUEUE, env.WORKFLOW_LLM_EXCHANGE, env.VARIANT_SCRIPT_RESPONSE_ROUTING_KEY);
+
+  variantScriptTopologyAssertedFlag = true;
+  rabbitmqLogger.info("Variant script RabbitMQ topology asserted");
+  return channel;
+};
+
+export const publishVariantScriptResponse = async (payload: unknown): Promise<void> => {
+  const channel = await assertVariantScriptTopology();
+  const body = Buffer.from(JSON.stringify(payload), "utf-8");
+  channel.publish(env.WORKFLOW_LLM_EXCHANGE, env.VARIANT_SCRIPT_RESPONSE_ROUTING_KEY, body, {
+    contentType: "application/json",
+    persistent: true,
+  });
+};
+
 export const closeRabbitMqResources = async (): Promise<void> => {
   if (cachedChannel) {
     try {
@@ -397,4 +443,5 @@ export const closeRabbitMqResources = async (): Promise<void> => {
   narrationTtsTopologyAssertedFlag = false;
   narrationCaptionTopologyAssertedFlag = false;
   embeddingTopologyAssertedFlag = false;
+  variantScriptTopologyAssertedFlag = false;
 };
