@@ -215,6 +215,17 @@ const workflowLlmEnvironmentSchema = z
     VARIANT_SCRIPT_PREFETCH: z.coerce.number().int().min(1).max(100).default(5),
     VARIANT_SCRIPT_MAX_RETRIES: z.coerce.number().int().min(0).max(10).default(2),
 
+    FEATURE_SIGNAL_LLM_EXCHANGE: z.string().min(1).default("neverstale.feature-signal"),
+    FEATURE_SIGNAL_LLM_REQUEST_QUEUE: z.string().min(1).default("feature-signal.generate.request"),
+    FEATURE_SIGNAL_LLM_RESPONSE_QUEUE: z.string().min(1).default("feature-signal.generate.response"),
+    FEATURE_SIGNAL_LLM_REQUEST_ROUTING_KEY: z.string().min(1).default("feature-signal.generate.request"),
+    FEATURE_SIGNAL_LLM_RESPONSE_ROUTING_KEY: z.string().min(1).default("feature-signal.generate.response"),
+    FEATURE_SIGNAL_LLM_DLX_EXCHANGE: z.string().min(1).default("neverstale.feature-signal.dlx"),
+    FEATURE_SIGNAL_LLM_DLQ: z.string().min(1).default("feature-signal.generate.dlq"),
+    FEATURE_SIGNAL_LLM_DL_ROUTING_KEY: z.string().min(1).default("feature-signal.generate.dead"),
+    FEATURE_SIGNAL_LLM_PREFETCH: z.coerce.number().int().min(1).max(100).default(2),
+    FEATURE_SIGNAL_LLM_MAX_RETRIES: z.coerce.number().int().min(0).max(10).default(3),
+
     NARRATION_DISABLE_LLM: z
       .string()
       .optional()

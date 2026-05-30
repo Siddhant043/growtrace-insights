@@ -25,6 +25,7 @@ let narrationTtsTopologyAssertedFlag = false;
 let narrationCaptionTopologyAssertedFlag = false;
 let embeddingTopologyAssertedFlag = false;
 let variantScriptTopologyAssertedFlag = false;
+let featureSignalTopologyAssertedFlag = false;
 
 export const connectToRabbitMq = async (): Promise<ChannelModel> => {
   if (cachedConnection) {
@@ -444,4 +445,47 @@ export const closeRabbitMqResources = async (): Promise<void> => {
   narrationCaptionTopologyAssertedFlag = false;
   embeddingTopologyAssertedFlag = false;
   variantScriptTopologyAssertedFlag = false;
+  featureSignalTopologyAssertedFlag = false;
+};
+
+export const assertFeatureSignalTopology = async (): Promise<Channel> => {
+  const channel = await getRabbitMqChannel();
+  if (featureSignalTopologyAssertedFlag) return channel;
+
+  await channel.assertExchange(env.FEATURE_SIGNAL_LLM_EXCHANGE, "topic", { durable: true });
+  await channel.assertExchange(env.FEATURE_SIGNAL_LLM_DLX_EXCHANGE, "topic", { durable: true });
+
+  await channel.assertQueue(env.FEATURE_SIGNAL_LLM_DLQ, { durable: true });
+  await channel.bindQueue(env.FEATURE_SIGNAL_LLM_DLQ, env.FEATURE_SIGNAL_LLM_DLX_EXCHANGE, env.FEATURE_SIGNAL_LLM_DL_ROUTING_KEY);
+
+  await channel.assertQueue(env.FEATURE_SIGNAL_LLM_REQUEST_QUEUE, {
+    durable: true,
+    arguments: {
+      "x-dead-letter-exchange": env.FEATURE_SIGNAL_LLM_DLX_EXCHANGE,
+      "x-dead-letter-routing-key": env.FEATURE_SIGNAL_LLM_DL_ROUTING_KEY,
+    },
+  });
+  await channel.bindQueue(env.FEATURE_SIGNAL_LLM_REQUEST_QUEUE, env.FEATURE_SIGNAL_LLM_EXCHANGE, env.FEATURE_SIGNAL_LLM_REQUEST_ROUTING_KEY);
+
+  await channel.assertQueue(env.FEATURE_SIGNAL_LLM_RESPONSE_QUEUE, {
+    durable: true,
+    arguments: {
+      "x-dead-letter-exchange": env.FEATURE_SIGNAL_LLM_DLX_EXCHANGE,
+      "x-dead-letter-routing-key": env.FEATURE_SIGNAL_LLM_DL_ROUTING_KEY,
+    },
+  });
+  await channel.bindQueue(env.FEATURE_SIGNAL_LLM_RESPONSE_QUEUE, env.FEATURE_SIGNAL_LLM_EXCHANGE, env.FEATURE_SIGNAL_LLM_RESPONSE_ROUTING_KEY);
+
+  featureSignalTopologyAssertedFlag = true;
+  rabbitmqLogger.info("Feature signal RabbitMQ topology asserted");
+  return channel;
+};
+
+export const publishFeatureSignalResponse = async (payload: unknown): Promise<void> => {
+  const channel = await assertFeatureSignalTopology();
+  const body = Buffer.from(JSON.stringify(payload), "utf-8");
+  channel.publish(env.FEATURE_SIGNAL_LLM_EXCHANGE, env.FEATURE_SIGNAL_LLM_RESPONSE_ROUTING_KEY, body, {
+    contentType: "application/json",
+    persistent: true,
+  });
 };
