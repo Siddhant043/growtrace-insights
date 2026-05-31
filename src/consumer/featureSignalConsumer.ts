@@ -22,7 +22,7 @@ const featureSignalRequestSchema = z.object({
   projectId:  z.string().min(1),
   eventType:  z.string().min(1),
   provider:   z.string().min(1),
-  rawPayload: z.record(z.unknown()),
+  rawPayload: z.record(z.string(), z.unknown()),
 });
 
 const featureSignalLlmOutputSchema = z.object({
